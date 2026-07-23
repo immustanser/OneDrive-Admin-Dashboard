@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "onedrive-admin-dashboard-client-side-solution",
+    "id": "bd2eeedd-0c32-4a47-ab11-3cf9b93fe682",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.21.1"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "onedrive-admin-dashboard description"
+      },
+      "longDescription": {
+        "default": "onedrive-admin-dashboard description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "onedrive-admin-dashboard Feature",
+        "description": "The feature that activates elements of the onedrive-admin-dashboard solution.",
+        "id": "94f57555-9d49-4b62-b4f0-99fc657f7c0d",
+        "version": "1.0.0.0"
+      }
+    ],
+    "webApiPermissionRequests": [
+      { "resource": "Microsoft Graph", "scope": "User.Read.All" },
+      { "resource": "Microsoft Graph", "scope": "Sites.Read.All" },
+      { "resource": "Microsoft Graph", "scope": "Reports.Read.All" },
+      { "resource": "Microsoft Graph", "scope": "Directory.Read.All" }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/onedrive-admin-dashboard.sppkg"
+  }
+}

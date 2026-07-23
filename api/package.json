@@ -1,0 +1,28 @@
+{
+  "name": "onedrive-dashboard-api",
+  "version": "1.0.0",
+  "description": "Azure Functions backend for the OneDrive Admin Dashboard SPFx web part. Acquires a Microsoft Graph token via client credentials flow and exposes tenant OneDrive usage data as JSON.",
+  "main": "dist/src/functions/*.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -p . --watch",
+    "clean": "rimraf dist",
+    "prestart": "npm run clean && npm run build",
+    "start": "func start",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.1",
+    "@azure/identity": "^4.4.1",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.50",
+    "@types/node-fetch": "^2.6.11",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "whichFolder": "subdir",
+    "solutionName": "onedrive-admin-dashboard",
+    "environment": "spo",
+    "packageManager": "npm",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart",
+    "template": "react",
+    "componentName": "OneDriveDashboard",
+    "componentDescription": "\"OneDrive",
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.17.1",
+    "sdksVersions": {},
+    "version": "1.21.1",
+    "libraryName": "onedrive-admin-dashboard",
+    "libraryId": "bd2eeedd-0c32-4a47-ab11-3cf9b93fe682",
+    "solutionShortDescription": "onedrive-admin-dashboard description"
+  }
+}

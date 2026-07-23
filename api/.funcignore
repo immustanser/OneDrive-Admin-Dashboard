@@ -1,0 +1,10 @@
+*.ts
+!dist/**/*.js
+.git*
+.vscode
+src
+tsconfig.json
+local.settings.json
+test
+.gitignore
+node_modules/.bin

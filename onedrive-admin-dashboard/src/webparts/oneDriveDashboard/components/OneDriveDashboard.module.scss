@@ -1,0 +1,44 @@
+@import '~@fluentui/react/dist/sass/References.scss';
+@import '../../../styles/variables';
+
+.oneDriveDashboard {
+  padding: $spacing-lg;
+  background: $color-background;
+  color: $color-text-primary;
+  min-height: 100%;
+  box-sizing: border-box;
+
+  &.teams {
+    font-family: $ms-font-family-fallbacks;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.headerSubtitle {
+  font-size: 13px;
+  color: $color-text-secondary;
+  margin-top: 2px;
+}
+
+.pivot {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionWrapper {
+  margin-bottom: $spacing-lg;
+}

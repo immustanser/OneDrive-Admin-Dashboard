@@ -1,0 +1,62 @@
+@import '../../styles/variables';
+
+.tilesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+@media (max-width: 900px) {
+  .tilesGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.tile {
+  background: $color-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  padding: $spacing-md;
+  text-align: center;
+}
+
+.tileValue {
+  font-size: 26px;
+  font-weight: 700;
+  color: $color-primary;
+}
+
+.tileLabel {
+  font-size: 12px;
+  color: $color-text-secondary;
+  margin-top: 4px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+}
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.drillDownCard {
+  background: $color-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  padding: $spacing-md;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+  border-bottom: 1px solid $color-border;
+  font-size: 13px;
+}
+
+.userRow:last-child {
+  border-bottom: none;
+}

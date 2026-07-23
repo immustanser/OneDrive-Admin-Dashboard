@@ -1,0 +1,35 @@
+@import '../styles/variables';
+
+.chartCard {
+  background: $color-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+
+.chartTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin: 0 0 $spacing-sm 0;
+}
+
+.chartBody {
+  flex: 1;
+  position: relative;
+  min-height: 240px;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+@media (max-width: 900px) {
+  .chartsGrid { grid-template-columns: 1fr; }
+}

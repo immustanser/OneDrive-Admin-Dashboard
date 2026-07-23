@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "one-drive-dashboard-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/oneDriveDashboard/OneDriveDashboardWebPart.js",
+          "manifest": "./src/webparts/oneDriveDashboard/OneDriveDashboardWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "OneDriveDashboardWebPartStrings": "lib/webparts/oneDriveDashboard/loc/{locale}.js"
+  }
+}

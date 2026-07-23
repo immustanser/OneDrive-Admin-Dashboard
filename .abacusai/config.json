@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export NEXT_DIST_DIR=.next && export __NEXT_TEST_MODE=1 && pwd && ls -la && node -v && npm -v && which yo 2>&1 || true)",
+      "Bash(export NEXT_DIST_DIR=.next && export __NEXT_TEST_MODE=1 && cd /d \"d:\\SPFX Projects\\onedrive-admin-dashbaord\" && dir && n…)",
+      "Bash(echo hello)"
+    ]
+  }
+}

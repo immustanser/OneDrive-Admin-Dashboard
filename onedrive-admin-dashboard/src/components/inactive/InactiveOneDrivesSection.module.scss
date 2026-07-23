@@ -1,0 +1,58 @@
+@import '../../styles/variables';
+
+.tabs {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+}
+
+.tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid $color-border;
+  background: $color-background;
+  color: $color-text-secondary;
+}
+
+.tabActive {
+  background: $color-primary;
+  border-color: $color-primary;
+  color: #FFFFFF;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 8px;
+  border-bottom: 1px solid $color-border;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.userMeta {
+  font-size: 12px;
+  color: $color-text-secondary;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
