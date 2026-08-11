@@ -1,6 +1,7 @@
 import { IOneDriveUser } from '../models';
+import { getHealthLevel } from './health';
 
-const COLUMNS: { key: keyof IOneDriveUser; label: string }[] = [
+const COLUMNS: { key: keyof IOneDriveUser | 'health'; label: string }[] = [
   { key: 'displayName', label: 'User Name' },
   { key: 'email', label: 'Email' },
   { key: 'department', label: 'Department' },
@@ -10,8 +11,16 @@ const COLUMNS: { key: keyof IOneDriveUser; label: string }[] = [
   { key: 'filesCount', label: 'Files Count' },
   { key: 'lastActivityDate', label: 'Last Activity Date' },
   { key: 'manager', label: 'Manager' },
-  { key: 'status', label: 'Status' }
+  { key: 'status', label: 'Status' },
+  { key: 'health', label: 'Health' }
 ];
+
+function getCellValue(row: IOneDriveUser, key: keyof IOneDriveUser | 'health'): unknown {
+  if (key === 'health') {
+    return getHealthLevel(row.storageUsedGB, row.storageQuotaGB);
+  }
+  return row[key];
+}
 
 function downloadBlob(content: string | Blob, fileName: string, mimeType: string): void {
   const blob = typeof content === 'string' ? new Blob([content], { type: mimeType }) : content;
@@ -35,7 +44,7 @@ function escapeCsvValue(value: unknown): string {
 
 export function exportToCsv(data: IOneDriveUser[], fileName: string = 'onedrive-inventory.csv'): void {
   const header = COLUMNS.map(c => escapeCsvValue(c.label)).join(',');
-  const rows = data.map(row => COLUMNS.map(c => escapeCsvValue(row[c.key])).join(','));
+  const rows = data.map(row => COLUMNS.map(c => escapeCsvValue(getCellValue(row, c.key))).join(','));
   const csv = [header, ...rows].join('\r\n');
   downloadBlob('\ufeff' + csv, fileName, 'text/csv;charset=utf-8;');
 }
@@ -43,7 +52,7 @@ export function exportToCsv(data: IOneDriveUser[], fileName: string = 'onedrive-
 export function exportToExcel(data: IOneDriveUser[], fileName: string = 'onedrive-inventory.xls'): void {
   const header = COLUMNS.map(c => `<th>${c.label}</th>`).join('');
   const rows = data
-    .map(row => `<tr>${COLUMNS.map(c => `<td>${row[c.key]}</td>`).join('')}</tr>`)
+    .map(row => `<tr>${COLUMNS.map(c => `<td>${getCellValue(row, c.key)}</td>`).join('')}</tr>`)
     .join('');
   const table = `
     <html xmlns:x="urn:schemas-microsoft-com:office:excel">

@@ -3,7 +3,7 @@
   "solution": {
     "name": "onedrive-admin-dashboard-client-side-solution",
     "id": "bd2eeedd-0c32-4a47-ab11-3cf9b93fe682",
-    "version": "1.0.0.1",
+    "version": "1.0.0.2",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

@@ -5,11 +5,13 @@ import { Sticky, StickyPositionType } from '@fluentui/react/lib/Sticky';
 import { IRenderFunction } from '@fluentui/react/lib/Utilities';
 import { SearchBox } from '@fluentui/react/lib/SearchBox';
 import { Dropdown, IDropdownOption } from '@fluentui/react/lib/Dropdown';
+import { ComboBox, IComboBox, IComboBoxOption } from '@fluentui/react/lib/ComboBox';
 import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
 import { usePagedOneDriveUsers } from '../../hooks';
-import { StatusBadge, EmptyState } from '../common';
+import { StatusBadge, HealthBadge, EmptyState } from '../common';
 import { formatGB, formatDate, formatNumber } from '../../utils/formatters';
 import { exportToCsv, exportToExcel } from '../../utils/exportUtils';
+import { getHealthLevel } from '../../utils/health';
 import { IOneDriveUser } from '../../models';
 import { useDashboardData } from '../../contexts/DashboardDataContext';
 import { buildOneDriveFallbackUrl } from '../../utils/oneDriveUrl';
@@ -21,8 +23,11 @@ const STATUS_OPTIONS: IDropdownOption[] = [
   { key: 'Inactive', text: 'Inactive' }
 ];
 
+const ALL_DEPARTMENTS_KEY = '';
+
 const PAGE_SIZE_OPTIONS: IDropdownOption[] = [
-  { key: 25, text: '25 / page' },
+  { key: 10, text: '10 / page' },
+  { key: 20, text: '20 / page' },
   { key: 50, text: '50 / page' },
   { key: 100, text: '100 / page' }
 ];
@@ -32,10 +37,16 @@ export const InventoryTable: React.FC = () => {
   const {
     items, totalCount, loading, page, pageSize, setPage, setPageSize,
     searchText, setSearchText, sortField, sortDescending, setSort,
-    statusFilter, setStatusFilter, profileStatus
-  } = usePagedOneDriveUsers(25);
+    statusFilter, setStatusFilter, departmentFilter, setDepartmentFilter, departmentOptions,
+    profileStatus
+  } = usePagedOneDriveUsers(10);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  const departmentComboOptions: IComboBoxOption[] = React.useMemo(() => [
+    { key: ALL_DEPARTMENTS_KEY, text: 'All Departments' },
+    ...departmentOptions.map(d => ({ key: d, text: d }))
+  ], [departmentOptions]);
 
   const onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
     if (!props || !defaultRender) {
@@ -77,12 +88,23 @@ export const InventoryTable: React.FC = () => {
       makeColumn('displayName', 'User Name', 140, 180),
       makeColumn('email', 'Email', 180, 240),
       makeColumn('department', 'Department', 110, 150, item => renderProfileField(item, item.department)),
-      makeColumn('oneDriveUrl', 'OneDrive URL', 160, 260, item => {
+      makeColumn('oneDriveUrl', 'OneDrive URL', 100, 130, item => {
         const url = item.oneDriveUrl || buildOneDriveFallbackUrl(item.email, tenantRootUrl);
         return url
           ? <a href={url} target="_blank" rel="noreferrer" title={url}>Open Drive</a>
           : <span>N/A</span>;
       }),
+      {
+        key: 'healthPercent',
+        name: 'Health',
+        minWidth: 100,
+        maxWidth: 130,
+        isResizable: true,
+        isSorted: sortField === 'healthPercent',
+        isSortedDescending: sortDescending,
+        onColumnClick: () => setSort('healthPercent'),
+        onRender: (item: IOneDriveUser) => <HealthBadge level={getHealthLevel(item.storageUsedGB, item.storageQuotaGB)} />
+      },
       makeColumn('storageUsedGB', 'Storage Used (GB)', 110, 140, item => formatGB(item.storageUsedGB)),
       makeColumn('storageQuotaGB', 'Storage Quota (GB)', 110, 140, item => formatGB(item.storageQuotaGB)),
       makeColumn('filesCount', 'Files Count', 90, 120, item => formatNumber(item.filesCount)),
@@ -113,6 +135,18 @@ export const InventoryTable: React.FC = () => {
               setStatusFilter(option.selected ? [...statusFilter, key] : statusFilter.filter(s => s !== key));
             }}
             styles={{ dropdown: { width: 160 } }}
+          />
+          <ComboBox
+            placeholder="All Departments"
+            allowFreeform={false}
+            autoComplete="on"
+            options={departmentComboOptions}
+            selectedKey={departmentFilter || ALL_DEPARTMENTS_KEY}
+            onChange={(_: React.FormEvent<IComboBox>, option) => {
+              if (!option) { return; }
+              setDepartmentFilter(option.key === ALL_DEPARTMENTS_KEY ? '' : String(option.key));
+            }}
+            styles={{ root: { width: 200 } }}
           />
         </div>
         <div className={styles.toolbarRight}>

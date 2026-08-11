@@ -44,6 +44,11 @@
   background: $color-danger;
 }
 
+.badgeOrange {
+  color: $color-orange;
+  background: rgba(202, 80, 16, 0.12);
+}
+
 .card {
   background: $color-card;
   border-radius: $radius-md;

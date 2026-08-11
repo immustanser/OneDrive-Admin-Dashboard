@@ -20,6 +20,9 @@ export interface IUsePagedOneDriveUsersResult {
   setSort: (field: string) => void;
   statusFilter: string[];
   setStatusFilter: (statuses: string[]) => void;
+  departmentFilter: string;
+  setDepartmentFilter: (department: string) => void;
+  departmentOptions: string[];
   /**
    * Per-user (keyed by email/UPN) status of the on-demand profile
    * enrichment call, for rows currently/previously visible on screen
@@ -44,9 +47,19 @@ export function usePagedOneDriveUsers(initialPageSize: number = 25): IUsePagedOn
   const [sortField, setSortField] = React.useState<string | undefined>('storageUsedGB');
   const [sortDescending, setSortDescending] = React.useState<boolean>(true);
   const [statusFilter, setStatusFilter] = React.useState<string[]>([]);
+  const [departmentFilter, setDepartmentFilter] = React.useState<string>('');
+  const [departmentOptions, setDepartmentOptions] = React.useState<string[]>([]);
   const [profileStatus, setProfileStatus] = React.useState<Map<string, ProfileStatus>>(new Map());
 
   const debouncedSearch = useDebounce(searchText, 300);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    OneDriveService.getDepartmentOptions()
+      .then(options => { if (isMounted) { setDepartmentOptions(options); } })
+      .catch(() => { /* leave department options empty on failure */ });
+    return () => { isMounted = false; };
+  }, []);
 
   const setSort = React.useCallback((field: string) => {
     setSortField(prevField => {
@@ -69,7 +82,8 @@ export function usePagedOneDriveUsers(initialPageSize: number = 25): IUsePagedOn
       searchText: debouncedSearch,
       sortField,
       sortDescending,
-      statusFilter
+      statusFilter,
+      departmentFilter: departmentFilter ? [departmentFilter] : undefined
     };
 
     OneDriveService.getPagedOneDriveUsers(query)
@@ -139,13 +153,14 @@ export function usePagedOneDriveUsers(initialPageSize: number = 25): IUsePagedOn
       .catch(() => { if (isMounted) { setLoading(false); } });
 
     return () => { isMounted = false; };
-  }, [page, pageSize, debouncedSearch, sortField, sortDescending, statusFilter]);
+  }, [page, pageSize, debouncedSearch, sortField, sortDescending, statusFilter, departmentFilter]);
 
-  React.useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter]);
+  React.useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, departmentFilter]);
 
   return {
     items, totalCount, loading, page, pageSize, setPage, setPageSize,
     searchText, setSearchText, sortField, sortDescending, setSort,
-    statusFilter, setStatusFilter, profileStatus
+    statusFilter, setStatusFilter, departmentFilter, setDepartmentFilter, departmentOptions,
+    profileStatus
   };
 }

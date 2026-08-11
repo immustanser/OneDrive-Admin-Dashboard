@@ -71,15 +71,22 @@ function deriveStatus(lastActivity: Date | undefined): { status: OneDriveStatus;
  * NEVER calls Microsoft Graph per-user (e.g. /users/{upn}) here. On large
  * tenants (thousands of OneDrive owners), enriching every inventory row
  * with a per-user profile/manager call causes Microsoft Graph to respond
- * with 429 Too Many Requests. department, jobTitle and manager are
- * therefore left as empty placeholders in this bulk path; the SPFx client
- * fetches those fields on demand, only for the rows currently visible on
- * screen, via GET /api/user-profile?upn=... (see functions/getUserProfile.ts
- * and services/graphUserProfileService.ts).
+ * with 429 Too Many Requests. jobTitle and manager are therefore left as
+ * empty placeholders in this bulk path; the SPFx client fetches those
+ * fields on demand, only for the rows currently visible on screen, via
+ * GET /api/user-profile?upn=... (see functions/getUserProfile.ts and
+ * services/graphUserProfileService.ts).
+ * department is optionally filled in from a SEPARATE bulk (not per-user)
+ * Graph directory lookup - see graphDirectoryService.ts - passed in here
+ * as `departmentsByUpn`, so the Inventory tab's Department filter can
+ * work across the whole tenant, not just currently-visible rows.
  * Sharing counts are also not present in this Graph report and are left
  * as genuine zero placeholders rather than fabricated values.
  */
-export function mapToInventoryUsers(rows: IOneDriveUsageAccountDetailRow[]): IOneDriveUser[] {
+export function mapToInventoryUsers(
+  rows: IOneDriveUsageAccountDetailRow[],
+  departmentsByUpn?: Map<string, string>
+): IOneDriveUser[] {
   return rows
     .filter((r) => !r.isDeleted)
     .map((r) => {
@@ -87,12 +94,13 @@ export function mapToInventoryUsers(rows: IOneDriveUsageAccountDetailRow[]): IOn
       const { status, days } = deriveStatus(lastActivity);
       const storageUsedGB = bytesToGB(r.storageUsedBytes);
       const storageQuotaGB = bytesToGB(r.storageAllocatedBytes);
+      const department = departmentsByUpn?.get((r.ownerPrincipalName || '').toLowerCase()) || '';
 
       const user: IOneDriveUser = {
         id: r.ownerPrincipalName || r.siteUrl,
         displayName: r.ownerDisplayName,
         email: r.ownerPrincipalName,
-        department: '',
+        department,
         jobTitle: '',
         oneDriveUrl: (r.siteUrl || '').trim(),
         storageUsedGB,
@@ -252,12 +260,13 @@ export function computeStorageByDepartment(
 
 export function buildDashboardResponse(
   accountDetailCsv: string,
-  storageCsv: string
+  storageCsv: string,
+  departmentsByUpn?: Map<string, string>
 ): IOneDriveDashboardResponse {
   const accountRows = parseAccountDetailCsv(accountDetailCsv);
   const storageRows = parseStorageCsv(storageCsv);
 
-  const users = mapToInventoryUsers(accountRows);
+  const users = mapToInventoryUsers(accountRows, departmentsByUpn);
 
   return {
     kpiData: computeKpis(users),

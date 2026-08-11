@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import { getOneDriveUsageAccountDetailCsv, getOneDriveUsageStorageCsv } from '../services/graphReportsService';
 import { buildDashboardResponse } from '../services/dashboardMapperService';
 import { getOrBuildDashboard } from '../services/dashboardCacheService';
+import { getAllUserDepartments } from '../services/graphDirectoryService';
 import { GraphThrottledError } from '../utils/graphFetch';
 
 /**
@@ -40,7 +41,19 @@ export async function getOneDriveDashboardData(
       // data or the dashboard response shape.
       const accountDetailCsv = await getOneDriveUsageAccountDetailCsv('D180');
       const storageCsv = await getOneDriveUsageStorageCsv('D180');
-      return buildDashboardResponse(accountDetailCsv, storageCsv);
+
+      // Bulk (paged, ~9 requests) department lookup for the Inventory
+      // tab's Department filter. Best-effort: if this fails for any
+      // reason, the dashboard still returns successfully with users'
+      // department left blank rather than failing the whole request.
+      let departmentsByUpn: Map<string, string> | undefined;
+      try {
+        departmentsByUpn = await getAllUserDepartments();
+      } catch (directoryError) {
+        context.warn('getOneDriveDashboardData: bulk department lookup failed, continuing without it.', directoryError);
+      }
+
+      return buildDashboardResponse(accountDetailCsv, storageCsv, departmentsByUpn);
     });
 
     return {

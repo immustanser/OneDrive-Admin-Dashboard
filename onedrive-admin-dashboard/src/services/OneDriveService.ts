@@ -145,7 +145,16 @@ export class OneDriveService {
       items = items.filter(u => query.departmentFilter?.indexOf(u.department) !== -1);
     }
 
-    if (query.sortField) {
+    if (query.sortField === 'healthPercent') {
+      // Health is a derived field (storageUsedGB / storageQuotaGB), not
+      // a real property on IOneDriveUser, so it needs its own comparator
+      // rather than the generic keyof-based one below.
+      items = [...items].sort((a, b) => {
+        const av = a.storageQuotaGB > 0 ? a.storageUsedGB / a.storageQuotaGB : 0;
+        const bv = b.storageQuotaGB > 0 ? b.storageUsedGB / b.storageQuotaGB : 0;
+        return query.sortDescending ? bv - av : av - bv;
+      });
+    } else if (query.sortField) {
       const field = query.sortField as keyof IOneDriveUser;
       items = [...items].sort((a, b) => {
         const av = a[field];
@@ -163,6 +172,22 @@ export class OneDriveService {
     const pageItems = items.slice(start, start + query.pageSize);
 
     return { items: pageItems, totalCount, page: query.page, pageSize: query.pageSize };
+  }
+
+  /**
+   * Distinct, alphabetically sorted list of non-empty department values
+   * across the full inventory dataset (not just the current page), for
+   * populating the Inventory tab's Department filter dropdown.
+   */
+  public static async getDepartmentOptions(): Promise<string[]> {
+    const users = await this.getAllOneDriveUsers();
+    const departments = new Set<string>();
+    users.forEach(u => {
+      if (u.department && u.department.trim()) {
+        departments.add(u.department.trim());
+      }
+    });
+    return Array.from(departments).sort((a, b) => a.localeCompare(b));
   }
 
   public static async getTopOneDrives(count: number = 10): Promise<ITopOneDrive[]> {
