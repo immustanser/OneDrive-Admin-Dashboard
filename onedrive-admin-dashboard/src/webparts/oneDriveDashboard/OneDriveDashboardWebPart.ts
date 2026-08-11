@@ -17,6 +17,7 @@ export interface IOneDriveDashboardWebPartProps {
   description: string;
   useMockData: boolean;
   apiBaseUrl: string;
+  apiResourceUri: string;
 }
 
 export default class OneDriveDashboardWebPart extends BaseClientSideWebPart<IOneDriveDashboardWebPartProps> {
@@ -37,7 +38,8 @@ export default class OneDriveDashboardWebPart extends BaseClientSideWebPart<IOne
         context: this.context,
         theme: this._theme,
         useMockData: this.properties.useMockData === true,
-        apiBaseUrl: this.properties.apiBaseUrl || ''
+        apiBaseUrl: this.properties.apiBaseUrl || '',
+        apiResourceUri: this.properties.apiResourceUri || ''
       }
     );
 
@@ -123,6 +125,10 @@ export default class OneDriveDashboardWebPart extends BaseClientSideWebPart<IOne
                 PropertyPaneTextField('apiBaseUrl', {
                   label: 'Azure Function API Base URL',
                   description: 'Base URL of the secure Azure Function backend, e.g. https://<app-name>.azurewebsites.net (no trailing slash).'
+                }),
+                PropertyPaneTextField('apiResourceUri', {
+                  label: 'Azure Function API Resource (App ID URI)',
+                  description: 'App ID URI exposed by the Azure Function\'s Entra ID app registration (Expose an API), e.g. api://<client-id> or api://<app-name>.azurewebsites.net. Required for authenticated calls via AadHttpClient.'
                 }),
                 PropertyPaneToggle('useMockData', {
                   label: 'Use sample data (local development only)',

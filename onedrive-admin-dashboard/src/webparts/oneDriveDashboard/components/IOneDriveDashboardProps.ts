@@ -11,4 +11,5 @@ export interface IOneDriveDashboardProps {
   theme: IReadonlyTheme | undefined;
   useMockData: boolean;
   apiBaseUrl: string;
+  apiResourceUri: string;
 }

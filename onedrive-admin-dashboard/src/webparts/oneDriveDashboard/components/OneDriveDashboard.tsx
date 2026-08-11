@@ -74,12 +74,12 @@ const DashboardShell: React.FC<{ description: string }> = ({ description }) => {
 
 export default class OneDriveDashboard extends React.Component<IOneDriveDashboardProps> {
   public render(): React.ReactElement<IOneDriveDashboardProps> {
-    const { hasTeamsContext, context, theme, isDarkTheme, useMockData, description, apiBaseUrl } = this.props;
+    const { hasTeamsContext, context, theme, isDarkTheme, useMockData, description, apiBaseUrl, apiResourceUri } = this.props;
 
     return (
       <section className={`${styles.oneDriveDashboard} ${hasTeamsContext ? styles.teams : ''}`}>
         <ThemeProvider theme={theme} isDarkTheme={isDarkTheme}>
-          <DashboardDataProvider context={context} apiBaseUrl={apiBaseUrl} useMockData={useMockData}>
+          <DashboardDataProvider context={context} apiBaseUrl={apiBaseUrl} apiResourceUri={apiResourceUri} useMockData={useMockData}>
             <DashboardShell description={description} />
           </DashboardDataProvider>
         </ThemeProvider>

@@ -36,9 +36,9 @@ export class OneDriveService {
   private static dashboardPromise?: Promise<IOneDriveDashboardApiResponse>;
   private static forceRefreshNext: boolean = false;
 
-  public static init(context: WebPartContext, apiBaseUrl: string, useMockData: boolean = false): void {
+  public static init(context: WebPartContext, apiBaseUrl: string, apiResourceUri: string, useMockData: boolean = false): void {
     this.useMockData = useMockData;
-    GraphService.init(context, apiBaseUrl);
+    GraphService.init(context, apiBaseUrl, apiResourceUri);
     if (useMockData) {
       // eslint-disable-next-line no-console
       console.warn('OneDriveService: useMockData=true - using local sample data, NOT the live Azure Function API. This should only be enabled for local development.');

@@ -27,11 +27,13 @@ const DashboardDataContext = React.createContext<IDashboardDataState | undefined
 export const DashboardDataProvider: React.FC<{
   context: WebPartContext;
   apiBaseUrl: string;
+  apiResourceUri: string;
   useMockData: boolean;
   children: React.ReactNode;
 }> = ({
   context,
   apiBaseUrl,
+  apiResourceUri,
   useMockData,
   children
 }) => {
@@ -57,7 +59,7 @@ export const DashboardDataProvider: React.FC<{
 
   React.useEffect(() => {
     let isMounted = true;
-    OneDriveService.init(context, apiBaseUrl, useMockData);
+    OneDriveService.init(context, apiBaseUrl, apiResourceUri, useMockData);
 
     async function load(): Promise<void> {
       setLoading(true);
@@ -134,7 +136,7 @@ export const DashboardDataProvider: React.FC<{
     load().catch(() => { /* handled above */ });
 
     return () => { isMounted = false; };
-  }, [context, apiBaseUrl, useMockData, refreshToken]);
+  }, [context, apiBaseUrl, apiResourceUri, useMockData, refreshToken]);
 
   // "Refresh Data" is the ONLY thing that invalidates the dashboard
   // cache/de-duplication state (see OneDriveService.invalidateCache) and
