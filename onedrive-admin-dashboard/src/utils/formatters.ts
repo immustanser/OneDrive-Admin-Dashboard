@@ -5,6 +5,22 @@ export function formatGB(value: number): string {
   return `${value.toFixed(1)} GB`;
 }
 
+/**
+ * Auto-formats a storage value (in GB) as TB or GB, matching the
+ * Inactive OneDrives tab's "Storage Used" column examples: 4.87 TB,
+ * 2.45 TB, 980 GB. TB is used at >= 1024 GB (2 decimal places); GB is
+ * shown as a whole number otherwise.
+ */
+export function formatStorageAuto(valueGB: number): string {
+  if (!valueGB || valueGB <= 0) {
+    return '0 GB';
+  }
+  if (valueGB >= 1024) {
+    return `${(valueGB / 1024).toFixed(2)} TB`;
+  }
+  return `${Math.round(valueGB)} GB`;
+}
+
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(value);
 }

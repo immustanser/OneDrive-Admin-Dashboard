@@ -56,3 +56,62 @@
   display: flex;
   gap: 6px;
 }
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+@media (max-width: 1100px) {
+  .summaryGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .summaryGrid { grid-template-columns: 1fr; }
+}
+
+.summaryLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.summaryValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: $color-text-primary;
+  line-height: 30px;
+  margin-top: 2px;
+}
+
+.summarySub {
+  font-size: 12px;
+  color: $color-text-secondary;
+  margin-top: 2px;
+}
+
+.gridScroll {
+  height: 480px;
+  position: relative;
+  overflow: auto;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $spacing-sm;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.footerInfo {
+  font-size: 13px;
+  color: $color-text-secondary;
+}
