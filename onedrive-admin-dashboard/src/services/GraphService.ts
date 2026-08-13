@@ -51,8 +51,26 @@ export interface IUserProfileApiResponse {
   manager: string;
 }
 
+export interface ISendReminderRequest {
+  userDisplayName: string;
+  userEmail: string;
+  managerName?: string;
+  department?: string;
+  storageUsed?: string;
+  storageUsedGB?: number;
+  daysInactive: number;
+  lastActivityDate?: string;
+  oneDriveUrl?: string;
+}
+
+export interface ISendReminderResponse {
+  success: boolean;
+  message: string;
+}
+
 const DASHBOARD_ROUTE = '/api/onedrive-dashboard';
 const USER_PROFILE_ROUTE = '/api/user-profile';
+const SEND_REMINDER_ROUTE = '/api/send-inactive-onedrive-reminder';
 
 const AUTH_FAILURE_MESSAGE =
   'Unable to authenticate to the OneDrive Dashboard API. Please verify that API permissions have been approved in SharePoint Admin Center.';
@@ -223,5 +241,60 @@ export class GraphService {
     }
 
     return (await response.json()) as IUserProfileApiResponse;
+  }
+
+  /**
+   * Calls the secure Azure Function backend to send a governance
+   * inactivity reminder email to a single inactive OneDrive owner. Like
+   * every other call in this service, this is authenticated with an
+   * Entra ID token via AadHttpClient - never a function key, never a
+   * client secret. The Function itself decides the sender mailbox
+   * (REMINDER_SENDER_UPN); this client never sends a "from" address.
+   */
+  public static async sendInactiveOneDriveReminder(payload: ISendReminderRequest): Promise<ISendReminderResponse> {
+    if (!this._apiBaseUrl) {
+      throw new Error(
+        'The Azure Function API Base URL has not been configured. Set it in the web part property pane.'
+      );
+    }
+
+    const url = `${this._apiBaseUrl}${SEND_REMINDER_ROUTE}`;
+    const client = await this.getClient();
+
+    // eslint-disable-next-line no-console
+    console.log('Send reminder authenticated request started for', payload.userEmail);
+
+    let response: HttpClientResponse;
+    try {
+      response = await client.post(url, AadHttpClient.configurations.v1, {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('GraphService: Send reminder request FAILED (network error).', err);
+      throw new Error(
+        'Unable to send reminder email. Please try again or contact the SharePoint Administration team.'
+      );
+    }
+
+    let body: ISendReminderResponse | undefined;
+    try {
+      body = (await response.json()) as ISendReminderResponse;
+    } catch {
+      body = undefined;
+    }
+
+    if (!response.ok || !body || !body.success) {
+      const message = body?.message
+        || 'Unable to send reminder email. Please try again or contact the SharePoint Administration team.';
+      // eslint-disable-next-line no-console
+      console.error(`GraphService: Send reminder request FAILED (status ${response.status}).`, message);
+      throw new Error(message);
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('Send reminder authenticated request succeeded for', payload.userEmail);
+    return body;
   }
 }

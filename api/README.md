@@ -15,6 +15,7 @@ SPFx web part  --(HTTPS GET)-->  Azure Function  --(client credentials)-->  Entr
 | `/api/onedrive-dashboard` | GET | Full dashboard payload (KPIs, inventory, storage analytics, inactive buckets, governance risks, sharing placeholders). |
 | `/api/onedrive-account-details` | GET | OneDrive inventory only. |
 | `/api/onedrive-storage-trend` | GET | Monthly storage trend only. |
+| `/api/send-inactive-onedrive-reminder` | POST | Sends an inactivity reminder email to one inactive OneDrive owner (Inactive OneDrives tab). |
 
 ## Local development
 
@@ -38,6 +39,7 @@ references) - never hardcode them in source:
 | `CLIENT_ID` | `4860a82b-fb77-41e4-a838-94fa2ea7d080` | Not secret. |
 | `CLIENT_SECRET` | *(secret)* | **Store only in Function App Settings or Key Vault.** Example Key Vault reference: `@Microsoft.KeyVault(SecretUri=https://<vault-name>.vault.azure.net/secrets/<secret-name>/)` |
 | `GRAPH_SCOPE` | `https://graph.microsoft.com/.default` | Client-credentials scope. |
+| `REMINDER_SENDER_UPN` | `SPAdmin01@stewart.com` | Not secret. Mailbox that "Send Reminder" emails are sent from (see `graphMailService.ts`). Must be a real, licensed mailbox in the tenant. |
 
 ## Entra ID App Registration
 
@@ -48,6 +50,19 @@ The app registration (`CLIENT_ID` above) must have these **application
 - `Directory.Read.All`
 - `User.Read.All`
 - `Sites.Read.All`
+- `Mail.Send` - required for the "Send Reminder" feature on the Inactive
+  OneDrives tab (`POST /api/send-inactive-onedrive-reminder`, implemented
+  in `graphMailService.ts`). **This is a sensitive permission**: as an
+  application (not delegated) permission, `Mail.Send` allows this app
+  registration to send mail as **any** mailbox in the tenant, not just
+  one. This backend limits the actual blast radius in code by only ever
+  calling `sendMail` for the single mailbox configured via the
+  `REMINDER_SENDER_UPN` application setting (intended value:
+  `SPAdmin01@stewart.com`, the SharePoint administration service
+  account) - no code path accepts a caller-supplied "from" address.
+  Admin consent is required in Entra ID before this permission takes
+  effect; without it, `/api/send-inactive-onedrive-reminder` will fail
+  with a Graph authorization error.
 
 ## Deployment
 

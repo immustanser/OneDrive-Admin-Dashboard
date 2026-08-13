@@ -1,5 +1,5 @@
 import { WebPartContext } from '@microsoft/sp-webpart-base';
-import { GraphService, IOneDriveDashboardApiResponse } from './GraphService';
+import { GraphService, IOneDriveDashboardApiResponse, ISendReminderRequest, ISendReminderResponse } from './GraphService';
 import { CacheManager } from '../utils/cacheManager';
 import { generateMockOneDriveUsers, generateMockStorageTrend } from '../utils/mockDataGenerator';
 import { IOneDriveUser, IPagedQuery, IPagedResult, IStorageTrendPoint, ITopOneDrive, IDashboardKpis, IGovernanceRiskItem } from '../models';
@@ -200,6 +200,20 @@ export class OneDriveService {
     }
     const data = await this.getDashboardData();
     return data.storageAnalytics.topOneDrives.slice(0, count);
+  }
+
+  /**
+   * Sends an inactivity reminder email for a single inactive OneDrive
+   * owner, via the secure Azure Function backend (see GraphService).
+   * In mock-data mode (local dev only, no live Function App), this is
+   * simulated as an immediate success without any network call, so the
+   * UI flow can still be exercised locally.
+   */
+  public static async sendInactiveOneDriveReminder(payload: ISendReminderRequest): Promise<ISendReminderResponse> {
+    if (this.useMockData) {
+      return { success: true, message: 'Reminder email sent successfully.' };
+    }
+    return GraphService.sendInactiveOneDriveReminder(payload);
   }
 
   public static async getStorageTrend(): Promise<IStorageTrendPoint[]> {

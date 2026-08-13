@@ -4,11 +4,13 @@ import { ScrollablePane, ScrollbarVisibility } from '@fluentui/react/lib/Scrolla
 import { Sticky, StickyPositionType } from '@fluentui/react/lib/Sticky';
 import { IRenderFunction } from '@fluentui/react/lib/Utilities';
 import { Dropdown, IDropdownOption } from '@fluentui/react/lib/Dropdown';
-import { DefaultButton } from '@fluentui/react/lib/Button';
-import { TooltipHost } from '@fluentui/react/lib/Tooltip';
+import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
+import { Dialog, DialogType, DialogFooter } from '@fluentui/react/lib/Dialog';
+import { MessageBar, MessageBarType } from '@fluentui/react/lib/MessageBar';
+import { Spinner, SpinnerSize } from '@fluentui/react/lib/Spinner';
 import { EmptyState, HealthBadge } from '../common';
 import { IOneDriveUser } from '../../models';
-import { daysSince, formatNumber, formatStorageAuto } from '../../utils/formatters';
+import { daysSince, formatNumber, formatStorageAuto, formatDate } from '../../utils/formatters';
 import { getHealthLevel } from '../../utils/health';
 import { OneDriveService, UserProfileService } from '../../services';
 import commonStyles from '../common/Common.module.scss';
@@ -55,6 +57,14 @@ export const InactiveOneDrivesSection: React.FC<IInactiveOneDrivesSectionProps> 
   // cached dashboard payload, so no per-row lookup is required for it.
   const [managerByEmail, setManagerByEmail] = React.useState<Map<string, string>>(new Map());
   const [profileStatus, setProfileStatus] = React.useState<Map<string, ProfileStatus>>(new Map());
+
+  // "Send Reminder" confirmation dialog + send state.
+  const [reminderTarget, setReminderTarget] = React.useState<IOneDriveUser | undefined>(undefined);
+  const [sendingReminder, setSendingReminder] = React.useState<boolean>(false);
+  const [reminderResult, setReminderResult] = React.useState<{ type: 'success' | 'error'; message: string } | undefined>(undefined);
+  // Emails for which a reminder was just sent successfully - shows
+  // "Reminder Sent" on that row's action button temporarily.
+  const [recentlySentEmails, setRecentlySentEmails] = React.useState<Set<string>>(new Set());
 
   const setSort = React.useCallback((field: string) => {
     setSortField(prevField => {
@@ -165,6 +175,54 @@ export const InactiveOneDrivesSection: React.FC<IInactiveOneDrivesSectionProps> 
     return { d30, d60, d90, totalStorageGB: d30.storageGB + d60.storageGB + d90.storageGB };
   }, [buckets]);
 
+  const openReminderDialog = React.useCallback((item: IOneDriveUser) => {
+    setReminderResult(undefined);
+    setReminderTarget(item);
+  }, []);
+
+  const closeReminderDialog = React.useCallback(() => {
+    if (sendingReminder) {
+      return;
+    }
+    setReminderTarget(undefined);
+  }, [sendingReminder]);
+
+  const confirmSendReminder = React.useCallback(async () => {
+    if (!reminderTarget) {
+      return;
+    }
+    const target = reminderTarget;
+    const manager = managerByEmail.get(target.email) || target.manager;
+
+    setSendingReminder(true);
+    setReminderResult(undefined);
+
+    try {
+      const response = await OneDriveService.sendInactiveOneDriveReminder({
+        userDisplayName: target.displayName,
+        userEmail: target.email,
+        managerName: manager || undefined,
+        department: target.department || undefined,
+        storageUsed: formatStorageAuto(target.storageUsedGB),
+        storageUsedGB: target.storageUsedGB,
+        daysInactive: daysSince(target.lastActivityDate),
+        lastActivityDate: formatDate(target.lastActivityDate),
+        oneDriveUrl: target.oneDriveUrl || undefined
+      });
+
+      setReminderResult({ type: 'success', message: response.message || `Reminder email sent successfully to ${target.email}.` });
+      setRecentlySentEmails(prev => new Set(prev).add(target.email));
+      setReminderTarget(undefined);
+    } catch (err) {
+      const message = err instanceof Error && err.message
+        ? err.message
+        : 'Unable to send reminder email. Please try again or contact the SharePoint Administration team.';
+      setReminderResult({ type: 'error', message });
+    } finally {
+      setSendingReminder(false);
+    }
+  }, [reminderTarget, managerByEmail]);
+
   const onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
     if (!props || !defaultRender) {
       return null;
@@ -243,16 +301,20 @@ export const InactiveOneDrivesSection: React.FC<IInactiveOneDrivesSectionProps> 
         minWidth: 140,
         maxWidth: 160,
         isResizable: false,
-        onRender: () => (
-          <TooltipHost content="Coming Soon - Inactivity Email Notifications">
-            <span>
-              <DefaultButton text="Send Reminder" iconProps={{ iconName: 'Mail' }} disabled />
-            </span>
-          </TooltipHost>
-        )
+        onRender: (item: IOneDriveUser) => {
+          const justSent = recentlySentEmails.has(item.email);
+          return (
+            <DefaultButton
+              text={justSent ? 'Reminder Sent' : 'Send Reminder'}
+              iconProps={{ iconName: justSent ? 'CheckMark' : 'Mail' }}
+              disabled={justSent}
+              onClick={() => openReminderDialog(item)}
+            />
+          );
+        }
       }
     ];
-  }, [sortField, sortDescending, setSort, profileStatus, managerByEmail]);
+  }, [sortField, sortDescending, setSort, profileStatus, managerByEmail, recentlySentEmails, openReminderDialog]);
 
   if (loading || !buckets) {
     return null;
@@ -260,6 +322,17 @@ export const InactiveOneDrivesSection: React.FC<IInactiveOneDrivesSectionProps> 
 
   return (
     <div>
+      {reminderResult && (
+        <MessageBar
+          messageBarType={reminderResult.type === 'success' ? MessageBarType.success : MessageBarType.error}
+          onDismiss={() => setReminderResult(undefined)}
+          isMultiline={false}
+          styles={{ root: { marginBottom: 12 } }}
+        >
+          {reminderResult.message}
+        </MessageBar>
+      )}
+
       <div className={styles.tabs}>
         {TABS.map(tab => (
           <div
@@ -331,6 +404,35 @@ export const InactiveOneDrivesSection: React.FC<IInactiveOneDrivesSectionProps> 
           </div>
         </>
       )}
+
+      <Dialog
+        hidden={!reminderTarget}
+        onDismiss={closeReminderDialog}
+        dialogContentProps={{
+          type: DialogType.normal,
+          title: 'Send OneDrive Inactivity Reminder',
+          subText: 'You are about to send an inactivity reminder to:'
+        }}
+        modalProps={{ isBlocking: true }}
+      >
+        {reminderTarget && (
+          <div style={{ fontSize: 13, lineHeight: 1.8 }}>
+            <div><strong>User:</strong> {reminderTarget.displayName}</div>
+            <div><strong>Email:</strong> {reminderTarget.email}</div>
+            <div><strong>Storage Used:</strong> {formatStorageAuto(reminderTarget.storageUsedGB)}</div>
+            <div><strong>Days Inactive:</strong> {formatNumber(daysSince(reminderTarget.lastActivityDate))}</div>
+            <div><strong>Last Activity:</strong> {formatDate(reminderTarget.lastActivityDate)}</div>
+            <div><strong>Department:</strong> {reminderTarget.department || 'N/A'}</div>
+            <div><strong>Manager:</strong> {(managerByEmail.get(reminderTarget.email) || reminderTarget.manager) || 'N/A'}</div>
+          </div>
+        )}
+        <DialogFooter>
+          <DefaultButton text="Cancel" onClick={closeReminderDialog} disabled={sendingReminder} />
+          <PrimaryButton onClick={confirmSendReminder} disabled={sendingReminder}>
+            {sendingReminder ? <Spinner size={SpinnerSize.xSmall} label="Sending..." labelPosition="right" /> : 'Send Reminder'}
+          </PrimaryButton>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 };
